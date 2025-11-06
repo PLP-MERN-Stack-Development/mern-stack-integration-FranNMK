@@ -1,14 +1,30 @@
-import express from "express";
-import Category from "../models/category.js";
-
-
+import express from 'express';
+import { body } from 'express-validator';
+import {
+  getCategories,
+  createCategory
+} from '../controllers/categoryController.js';
+import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.get("/", async (req, res) => res.json(await Category.find()));
-router.post("/", async (req, res) => {
-  const cat = await Category.create(req.body);
-  res.status(201).json(cat);
-});
+// Validation rules
+const categoryValidation = [
+  body('name')
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Category name must be between 2 and 50 characters'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Description cannot exceed 200 characters')
+];
+
+// Public routes
+router.get('/', getCategories);
+
+// Protected admin routes
+router.post('/', protect, admin, categoryValidation, createCategory);
 
 export default router;
